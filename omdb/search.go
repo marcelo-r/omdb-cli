@@ -2,6 +2,7 @@ package omdb
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
 	"text/template"
 )
@@ -13,6 +14,7 @@ type ResponseSearch struct {
 	TotalResults string         `json:"totalResults"`
 }
 
+// SearchResult holds the response when search without a type
 type SearchResult struct {
 	Poster string `json:"Poster"`
 	Title  string `json:"Title"`
@@ -28,12 +30,14 @@ Showing the first {{len .Result}}
 {{range .Result}} 
 	Title: {{.Title}} ({{.Year}})
 	Type: {{.Type}}
+	Id: {{.Imdbid}}
 	IMDb: https://www.imdb.com/title/{{.Imdbid}}
 {{end}}
 `
 
 // Render uses a template to render a reponse into a string
-func (response ResponseSearch) Render() string {
+// used to render a response into a string for stdout
+func (response *ResponseSearch) Render() string {
 	searchTemplate, err := template.New("Search").Parse(searchResultTemplate)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -45,10 +49,8 @@ func (response ResponseSearch) Render() string {
 	return buffer.String()
 }
 
-func (response ResponseSearch) Load() error {
-	return nil
-}
-
-func (response ResponseSearch) RenderHTML() string {
-	return ""
+// Load serializes response data into a ResponseSearch
+func (response *ResponseSearch) Load(data *[]byte) error {
+	err := json.Unmarshal(*data, &response)
+	return err
 }
